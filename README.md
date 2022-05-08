@@ -1,13 +1,15 @@
 # Self Hosting
 
-> Infraestrutura de serviços open source que eu uso diariamente
+Infraestrutura de serviços open source que eu uso diariamente, feito em Docker
 
-## Pré - Requisitos
+## Instalação 
 
-- Máquina com capacidade de rodar containers Docker e `docker-compose` instalado 
+- Clone o repositório em sua máquina e abra um terminal dentro da pasta
+- Use `docker-compose up` para iniciar a infra em forma efêmera (sem armazenamento fixo)
 
-## Usando 
+## Roadmap 
 
-- Primeiramente clone o repositório com `git clone https://github.com/dandeeccastro/self_hosting`
-- Depois entre no diretório com `cd self_hosting`
-- Por fim, inicie os containers com `docker-compose up -d`
+- [ ] Adicionar mais images para o self-hosting
+  - [ ] Gitea
+  - [ ] Bots Discord Customizados
+  - [ ] ...
