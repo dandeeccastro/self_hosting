@@ -63,6 +63,11 @@ services:
     networks: 
       - gitea_internal
 
+  biribinha: 
+    image: biribinha:latest
+    environment:
+      - "TOKEN=${BOT_TOKEN}"
+
 volumes: 
   monica_data: 
     name: monica_data
