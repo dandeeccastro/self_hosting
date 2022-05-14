@@ -1,11 +1,8 @@
 # Self Hosting
-
-Infraestrutura de serviços open source que eu uso diariamente, feito em Docker
+> Infraestrutura de serviços open source que eu uso diariamente, feito em Docker
 
 ## Descrição 
-
 Os seguintes serviços estão especificados dentro do meu arquivo Compose:
-
 - *Gitea*: Server de git interno
 - *MonicaHQ*: Personal Relationship Manager
 - *Biribinha*: Bot pessoal de música no Discord (código indisponível)
