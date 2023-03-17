@@ -1,77 +1,65 @@
 services: 
-  monica:
-    image: monica
-    depends_on:
-      - monica_db
-    ports:
-      - 8080:80
-    environment:
-      - APP_KEY=base64:fx1eX/7e5GchUja6ctSF7h+wGXqLROlxrMm6mXDCyyk=
-      - APP_DISABLE_SIGNUP=false # Necessário para criar uma conta inicial
-      - DB_HOST=monica_db
-      - DB_USERNAME=monica
-      - DB_PASSWORD=secret
-    volumes: 
-      - monica_data:/var/www/html/storage
-    networks: 
-      - monica_internal
 
-  gitea: 
-    image: gitea/gitea:1.16.7
-    depends_on: 
-      - gitea_db
-    ports: 
-      - 8081:3000
-      - 222:2222
-    environment: 
-      - USER_UID=1000
-      - USER_GID=1000
-      - GITEA__database__DB_TYPE=mysql
-      - GITEA__database__HOST=gitea_db:3306
-      - GITEA__database__NAME=gitea
-      - GITEA__database__USER=gitea
-      - GITEA__database__PASSWD=gitea
-    networks: 
-      - gitea_internal
-    volumes: 
-      - gitea_data:/data
+  reverse_proxy:
+    image: nginxproxy/nginx-proxy
+    container_name: revproxy
+    ports:
+      - 80:80 #optional
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+
+  # Exposed services
+  gitea:
+    image: gitea/gitea:1.18.5-rootless
+    volumes:
+      - gitea-data:/var/lib/gitea
+      - gitea-config:/etc/gitea
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
+    environment:
+      - VIRTUAL_HOST=git.localhost
+      - VIRTUAL_PORT=3000
 
-  monica_db: 
-    image: mysql:5.7
-    environment: 
+  monica:
+    image: monica:apache
+    container_name: monica
+    depends_on:
+      - monica_db
+    environment:
+      - VIRTUAL_HOST=monica.localhost
+      - APP_ENV=production
+      - DB_HOST=monica_db
+      - DB_DATABASE=monica
+      - DB_USERNAME=monica
+      - DB_PASSWORD=secret
+      - LOG_CHANNEL=stderr
+      - CACHE_DRIVER=database
+      - SESSION_DRIVER=database
+      - QUEUE_DRIVER=sync
+    volumes:
+      - monica_data:/var/www/html/storage
+    networks:
+      - monica_internals
+
+  monica_db:
+    image: mysql:8.0
+    container_name: monica_db
+    environment:
       - MYSQL_RANDOM_ROOT_PASSWORD=true
       - MYSQL_DATABASE=monica
       - MYSQL_USER=monica
       - MYSQL_PASSWORD=secret
     volumes:
       - monica_mysql:/var/lib/mysql
-    networks: 
-      - monica_internal
+    networks:
+      - monica_internals
 
-  gitea_db:
-    image: mysql:5.7
-    environment: 
-      - MYSQL_ROOT_PASSWORD=gitea
-      - MYSQL_DATABASE=gitea
-      - MYSQL_USER=gitea
-      - MYSQL_PASSWORD=gitea
-    volumes:
-      - gitea_mysql:/var/lib/mysql
-    networks: 
-      - gitea_internal
-
-  biribinha: 
-    image: biribinha:latest
-    environment:
-      - "TOKEN=${BOT_TOKEN}"
 
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
-    ports: 
-      - 8096:8096
+    container_name: jellyfin
     environment:
+      - VIRTUAL_HOST=jellyfin
       - PUID=1000
       - PGID=1000
       - TZ=America/Sao_Paulo
@@ -80,22 +68,27 @@ services:
       - jellyfin_tvshows:/data/tvshows
       - jellyfin_movies:/data/movies
 
+  # Just code I want to run
+  # biribinha: 
+  #   image: biribinha:latest
+  #   environment:
+  #     - "TOKEN=${BOT_TOKEN}"
+
 volumes: 
-  monica_data: 
-    name: monica_data
-  monica_mysql: 
-    name: monica_mysql
-  gitea_data: 
-    name: gitea_data
-  gitea_mysql: 
-    name: gitea_mysql
   jellyfin_config:
     name: jellyfin_config
   jellyfin_tvshows:
     name: jellyfin_tvshows
   jellyfin_movies:
     name: jellyfin_movies
+  gitea-data:
+    name: gitea-data
+  gitea-config:
+    name: gitea-config
+  monica_data:
+    name: monica_data
+  monica_mysql:
+    name: monica_mysql
 
 networks:
-  monica_internal: {}
-  gitea_internal: {} 
+  monica_internals: {}
