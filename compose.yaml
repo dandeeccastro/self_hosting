@@ -11,6 +11,7 @@ services:
   # Exposed services
   gitea:
     image: gitea/gitea:1.18.5-rootless
+    container_name: gitea
     volumes:
       - gitea-data:/var/lib/gitea
       - gitea-config:/etc/gitea
@@ -19,6 +20,7 @@ services:
     environment:
       - VIRTUAL_HOST=git.localhost
       - VIRTUAL_PORT=3000
+    restart: unless-stopped
 
   monica:
     image: monica:apache
@@ -27,7 +29,7 @@ services:
       - monica_db
     environment:
       - VIRTUAL_HOST=monica.localhost
-      - APP_ENV=production
+      - APP_ENV=
       - DB_HOST=monica_db
       - DB_DATABASE=monica
       - DB_USERNAME=monica
@@ -38,8 +40,7 @@ services:
       - QUEUE_DRIVER=sync
     volumes:
       - monica_data:/var/www/html/storage
-    networks:
-      - monica_internals
+    restart: unless-stopped
 
   monica_db:
     image: mysql:8.0
@@ -51,15 +52,13 @@ services:
       - MYSQL_PASSWORD=secret
     volumes:
       - monica_mysql:/var/lib/mysql
-    networks:
-      - monica_internals
-
+    restart: unless-stopped
 
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
     environment:
-      - VIRTUAL_HOST=jellyfin
+      - VIRTUAL_HOST=jellyfin.localhost
       - PUID=1000
       - PGID=1000
       - TZ=America/Sao_Paulo
@@ -67,12 +66,20 @@ services:
       - jellyfin_config:/config
       - jellyfin_tvshows:/data/tvshows
       - jellyfin_movies:/data/movies
+      - jellyfin_music:/data/music
+    restart: unless-stopped
 
-  # Just code I want to run
-  # biribinha: 
-  #   image: biribinha:latest
-  #   environment:
-  #     - "TOKEN=${BOT_TOKEN}"
+  dokuwiki:
+    image: lscr.io/linuxserver/dokuwiki:latest
+    container_name: dokuwiki
+    environment:
+      - VIRTUAL_HOST=wiki.localhost
+      - PUID=1000
+      - PGID=1000
+      - TZ=America/Sao_Paulo
+    volumes:
+      - dokuwiki_config:/config
+    restart: unless-stopped
 
 volumes: 
   jellyfin_config:
@@ -89,6 +96,3 @@ volumes:
     name: monica_data
   monica_mysql:
     name: monica_mysql
-
-networks:
-  monica_internals: {}
