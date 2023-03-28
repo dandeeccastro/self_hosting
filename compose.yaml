@@ -4,7 +4,7 @@ services:
     image: nginxproxy/nginx-proxy
     container_name: revproxy
     ports:
-      - 80:80 #optional
+      - 80:80
     volumes:
       - /var/run/docker.sock:/tmp/docker.sock:ro
 
@@ -13,12 +13,12 @@ services:
     image: gitea/gitea:1.18.5-rootless
     container_name: gitea
     volumes:
-      - gitea-data:/var/lib/gitea
-      - gitea-config:/etc/gitea
+      - ${DIR}/gitea/data:/var/lib/gitea
+      - ${DIR}/gitea/config:/etc/gitea
       - /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
     environment:
-      - VIRTUAL_HOST=git.localhost
+      - VIRTUAL_HOST=git.${DOMAIN}
       - VIRTUAL_PORT=3000
     restart: unless-stopped
 
@@ -28,7 +28,7 @@ services:
     depends_on:
       - monica_db
     environment:
-      - VIRTUAL_HOST=monica.localhost
+      - VIRTUAL_HOST=monica.${DOMAIN}
       - APP_ENV=
       - DB_HOST=monica_db
       - DB_DATABASE=monica
@@ -39,7 +39,7 @@ services:
       - SESSION_DRIVER=database
       - QUEUE_DRIVER=sync
     volumes:
-      - monica_data:/var/www/html/storage
+      - ${DIR}/monica/data:/var/www/html/storage
     restart: unless-stopped
 
   monica_db:
@@ -51,48 +51,32 @@ services:
       - MYSQL_USER=monica
       - MYSQL_PASSWORD=secret
     volumes:
-      - monica_mysql:/var/lib/mysql
+      - ${DIR}/monica/mysql:/var/lib/mysql
     restart: unless-stopped
 
   jellyfin:
     image: lscr.io/linuxserver/jellyfin:latest
     container_name: jellyfin
     environment:
-      - VIRTUAL_HOST=jellyfin.localhost
+      - VIRTUAL_HOST=jellyfin.${DOMAIN}
       - PUID=1000
       - PGID=1000
       - TZ=America/Sao_Paulo
     volumes: 
-      - jellyfin_config:/config
-      - jellyfin_tvshows:/data/tvshows
-      - jellyfin_movies:/data/movies
-      - jellyfin_music:/data/music
+      - ${DIR}/jellyfin/config:/config
+      - ${DIR}/jellyfin/tvshows:/data/tvshows
+      - ${DIR}/jellyfin/movies:/data/movies
+      - ${DIR}/jellyfin/music:/data/music
     restart: unless-stopped
 
   dokuwiki:
     image: lscr.io/linuxserver/dokuwiki:latest
     container_name: dokuwiki
     environment:
-      - VIRTUAL_HOST=wiki.localhost
+      - VIRTUAL_HOST=wiki.${DOMAIN}
       - PUID=1000
       - PGID=1000
       - TZ=America/Sao_Paulo
     volumes:
-      - dokuwiki_config:/config
+      - ${DIR}/dokuwiki/config:/config
     restart: unless-stopped
-
-volumes: 
-  jellyfin_config:
-    name: jellyfin_config
-  jellyfin_tvshows:
-    name: jellyfin_tvshows
-  jellyfin_movies:
-    name: jellyfin_movies
-  gitea-data:
-    name: gitea-data
-  gitea-config:
-    name: gitea-config
-  monica_data:
-    name: monica_data
-  monica_mysql:
-    name: monica_mysql
